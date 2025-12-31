@@ -27,7 +27,7 @@ export function GaugeChart({ score, maxScore = 100, className }: GaugeChartProps
   };
 
   const getScoreLabel = () => {
-    if (percentage >= 80) return "Excellent";
+    if (percentage >= 80) return "Strong Foundation";
     if (percentage >= 60) return "Good";
     if (percentage >= 40) return "Needs Improvement";
     return "Critical";
