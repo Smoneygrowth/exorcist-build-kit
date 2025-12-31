@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 interface DiagnosticState {
   baselineFee: number;
   etfFamiliarity: string;
   quizGuess: string;
   isHighOpportunityCost: boolean;
+  email: string;
 }
 
 export function DiagnosticFlow() {
@@ -18,10 +22,12 @@ export function DiagnosticFlow() {
     etfFamiliarity: "",
     quizGuess: "",
     isHighOpportunityCost: false,
+    email: "",
   });
+  const { toast } = useToast();
 
   const handleNext = () => {
-    if (currentStep < 7) {
+    if (currentStep < 8) {
       setCurrentStep((prev) => (prev + 1) as Step);
     }
   };
@@ -89,7 +95,39 @@ export function DiagnosticFlow() {
     handleNext();
   };
 
-  const progress = (currentStep / 7) * 100;
+  const handleEmailSubmit = async (email: string) => {
+    try {
+      const { error } = await supabase.functions.invoke("send-contact-email", {
+        body: {
+          email,
+          name: "Future Client",
+          message: `Diagnostic completed. Fee: ${state.baselineFee}%, ETF familiarity: ${state.etfFamiliarity}, Quiz guess: ${state.quizGuess}`,
+        },
+      });
+
+      if (error) {
+        console.error("Error submitting email:", error);
+        toast({
+          title: "Error",
+          description: "Failed to submit email. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setState((prev) => ({ ...prev, email }));
+      handleNext();
+    } catch (err) {
+      console.error("Error submitting email:", err);
+      toast({
+        title: "Error",
+        description: "Failed to submit email. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const progress = (currentStep / 8) * 100;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -109,7 +147,8 @@ export function DiagnosticFlow() {
           {currentStep === 4 && <Step4Familiarity onSelect={handleStep4} />}
           {currentStep === 5 && <Step5PopQuiz onSelect={handleStep5} />}
           {currentStep === 6 && <Step6Reveal onNext={handleNext} />}
-          {currentStep === 7 && <Step7Gate />}
+          {currentStep === 7 && <Step7Gate onSubmit={handleEmailSubmit} />}
+          {currentStep === 8 && <Step8Results state={state} />}
         </div>
       </div>
     </div>
@@ -321,12 +360,82 @@ function Step6Reveal({ onNext }: { onNext: () => void }) {
   );
 }
 
-function Step7Gate() {
+function Step7Gate({ onSubmit }: { onSubmit: (email: string) => void }) {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValidEmail || isLoading) return;
+
+    setIsLoading(true);
+    await onSubmit(email);
+    setIsLoading(false);
+  };
+
   return (
     <div className="animate-fade-in space-y-8 text-center">
-      <div className="p-12 rounded-xl border border-dashed border-border bg-muted/30">
+      <div className="space-y-4">
+        <p className="text-sm uppercase tracking-wider text-muted-foreground">
+          Step 7 of 8
+        </p>
+        <h1 className="text-3xl md:text-4xl font-serif font-medium text-foreground leading-tight">
+          Your Personal Score is Ready
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-md mx-auto">
+          Enter your email to unlock your personalized investment diagnostic results.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-sm mx-auto">
+        <Input
+          type="email"
+          placeholder="your@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="h-14 text-center text-lg"
+          disabled={isLoading}
+        />
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={!isValidEmail || isLoading}
+        >
+          {isLoading ? "Unlocking..." : "Unlock My Results"}
+        </Button>
+      </form>
+
+      <p className="text-xs text-muted-foreground">
+        We respect your privacy. No spam, ever.
+      </p>
+    </div>
+  );
+}
+
+function Step8Results({ state }: { state: DiagnosticState }) {
+  return (
+    <div className="animate-fade-in space-y-8 text-center">
+      <div className="space-y-4">
+        <p className="text-sm uppercase tracking-wider text-muted-foreground">
+          Your Results
+        </p>
+        <h1 className="text-3xl md:text-4xl font-serif font-medium text-foreground leading-tight">
+          Your Investment Diagnostic
+        </h1>
+      </div>
+
+      <div className="p-8 rounded-xl border border-border bg-card space-y-4">
         <p className="text-muted-foreground">
-          Email Gate will go here
+          Based on your answers, your estimated fee rate is:
+        </p>
+        <p className="text-5xl font-bold text-foreground">
+          {state.baselineFee}%
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Results sent to: {state.email}
         </p>
       </div>
     </div>
