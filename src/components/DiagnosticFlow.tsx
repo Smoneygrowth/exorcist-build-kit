@@ -491,38 +491,32 @@ function Step8Gate({ onSubmit }: { onSubmit: (email: string, firstName: string) 
 }
 
 function Step9Results({ state }: { state: DiagnosticState }) {
-  // Calculate efficiency score: lower fees = higher score, ETF familiarity boosts score
-  const calculateEfficiencyScore = () => {
-    let score = 100;
-    
-    // Deduct points based on fee level (higher fees = lower score)
-    if (state.baselineFee >= 2.0) {
-      score -= 50;
-    } else if (state.baselineFee >= 1.5) {
-      score -= 35;
-    } else if (state.baselineFee >= 1.0) {
-      score -= 20;
-    } else if (state.baselineFee >= 0.5) {
-      score -= 10;
-    }
-    
-    // Add points for ETF familiarity
+  // Determine user profile based on their answers
+  const getUserProfile = () => {
+    // Case 1: User already invests in ETFs
     if (state.etfFamiliarity === "experienced") {
-      score += 10;
-    } else if (state.etfFamiliarity === "basic") {
-      score += 0;
-    } else if (state.etfFamiliarity === "none") {
-      score -= 10;
+      return {
+        score: 85,
+        text: "Your portfolio is decent, but you are likely leaving money on the table. You can optimize further by activating securities lending and setting up smarter tax structuring.",
+      };
     }
     
-    // Clamp score between 0 and 100
-    return Math.max(0, Math.min(100, score));
+    // Case 3: User does not invest yet / Cash
+    if (state.isHighOpportunityCost) {
+      return {
+        score: 15,
+        text: "Inaction is costing you the most. While you wait for the perfect moment, inflation is burning your purchasing power and you are losing the one asset you can't buy back: time.",
+      };
+    }
+    
+    // Case 2: User uses expensive banks / active funds (default)
+    return {
+      score: 55,
+      text: "Reducing your fees and using ETFs could lower the fees you pay by €2,000–€10,000 per year. Stop funding your banker's vacation and start funding your own.",
+    };
   };
 
-  const efficiencyScore = calculateEfficiencyScore();
-  
-  // High efficiency: user uses ETFs and has low fees
-  const isHighEfficiency = state.etfFamiliarity === "experienced" && state.baselineFee <= 0.5;
+  const profile = getUserProfile();
 
   useEffect(() => {
     // Load Calendly widget script and CSS
@@ -569,20 +563,13 @@ function Step9Results({ state }: { state: DiagnosticState }) {
 
       <div className="p-8 rounded-2xl border border-border bg-card space-y-6">
         <div className="flex justify-center">
-          <GaugeChart score={efficiencyScore} maxScore={100} />
+          <GaugeChart score={profile.score} maxScore={100} />
         </div>
 
         <div className="pt-4 border-t border-border">
-          {isHighEfficiency ? (
-            <p className="text-lg md:text-xl text-foreground leading-relaxed">
-              You're doing good but you can optimize further. Would you like to learn how?
-            </p>
-          ) : (
-            <p className="text-lg md:text-xl text-foreground leading-relaxed">
-              Reducing your fees and using ETFs could lower the fees you pay by{" "}
-              <span className="font-semibold text-primary">€2,000–€10,000</span> per year.
-            </p>
-          )}
+          <p className="text-lg md:text-xl text-foreground leading-relaxed">
+            {profile.text}
+          </p>
         </div>
 
         <Button
