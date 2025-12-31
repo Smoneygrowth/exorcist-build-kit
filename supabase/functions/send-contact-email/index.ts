@@ -9,6 +9,7 @@ interface ContactRequest {
   email: string;
   name: string;
   message: string;
+  investor_profile?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -27,9 +28,9 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("MailerLite API key is not configured");
     }
 
-    const { email, name, message }: ContactRequest = await req.json();
+    const { email, name, message, investor_profile }: ContactRequest = await req.json();
     
-    console.log(`Processing contact form submission from: ${email}`);
+    console.log(`Processing contact form submission from: ${email}, investor_profile: ${investor_profile}`);
 
     // Validate inputs
     if (!email || !name || !message) {
@@ -43,7 +44,16 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Add subscriber to MailerLite with group assignment
+    // Build fields object with investor_profile custom field
+    const fields: Record<string, string> = {
+      name: name,
+    };
+    
+    if (investor_profile) {
+      fields.investor_profile = investor_profile;
+    }
+
+    // Add subscriber to MailerLite with group assignment and custom fields
     const subscriberResponse = await fetch("https://connect.mailerlite.com/api/subscribers", {
       method: "POST",
       headers: {
@@ -52,9 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         email: email,
-        fields: {
-          name: name,
-        },
+        fields: fields,
         groups: ["175309374057613174"],
       }),
     });
