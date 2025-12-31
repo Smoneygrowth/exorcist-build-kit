@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { GaugeChart } from "@/components/GaugeChart";
+import { Calendar } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -538,12 +539,6 @@ function Step9Results({ state }: { state: DiagnosticState }) {
         <div className="flex justify-center">
           <GaugeChart score={efficiencyScore} maxScore={100} />
         </div>
-        
-        <div className="space-y-2">
-          <p className="text-lg font-medium text-foreground">
-            Your Efficiency Score
-          </p>
-        </div>
 
         <div className="pt-4 border-t border-border">
           {isHighEfficiency ? (
@@ -558,18 +553,19 @@ function Step9Results({ state }: { state: DiagnosticState }) {
           )}
         </div>
 
+        <Button
+          onClick={handleBookCall}
+          size="lg"
+          className="w-full bg-foreground text-background hover:bg-foreground/90"
+        >
+          <Calendar className="w-4 h-4 mr-2" />
+          Book Your Strategy Review
+        </Button>
+
         <p className="text-xs text-muted-foreground">
           Results sent to: {state.email}
         </p>
       </div>
-
-      <Button
-        onClick={handleBookCall}
-        size="lg"
-        className="w-full max-w-sm"
-      >
-        Book a Call
-      </Button>
     </div>
   );
 }
