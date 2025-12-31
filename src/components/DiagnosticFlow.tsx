@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { GaugeChart } from "@/components/GaugeChart";
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 interface DiagnosticState {
   baselineFee: number;
@@ -28,7 +28,7 @@ export function DiagnosticFlow() {
   const { toast } = useToast();
 
   const handleNext = () => {
-    if (currentStep < 8) {
+    if (currentStep < 9) {
       setCurrentStep((prev) => (prev + 1) as Step);
     }
   };
@@ -128,7 +128,7 @@ export function DiagnosticFlow() {
     }
   };
 
-  const progress = (currentStep / 8) * 100;
+  const progress = (currentStep / 9) * 100;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -137,7 +137,7 @@ export function DiagnosticFlow() {
         <div className="max-w-2xl mx-auto px-6 py-3">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-muted-foreground">
-              Step {currentStep} of 8
+              Step {currentStep} of 9
             </span>
             <span className="text-sm text-muted-foreground">
               {Math.round(progress)}% complete
@@ -160,8 +160,9 @@ export function DiagnosticFlow() {
           {currentStep === 4 && <Step4Familiarity onSelect={handleStep4} />}
           {currentStep === 5 && <Step5PopQuiz onSelect={handleStep5} />}
           {currentStep === 6 && <Step6Reveal onNext={handleNext} />}
-          {currentStep === 7 && <Step7Gate onSubmit={handleEmailSubmit} />}
-          {currentStep === 8 && <Step8Results state={state} />}
+          {currentStep === 7 && <Step7Calculating onNext={handleNext} />}
+          {currentStep === 8 && <Step8Gate onSubmit={handleEmailSubmit} />}
+          {currentStep === 9 && <Step9Results state={state} />}
         </div>
       </div>
     </div>
@@ -373,7 +374,45 @@ function Step6Reveal({ onNext }: { onNext: () => void }) {
   );
 }
 
-function Step7Gate({ onSubmit }: { onSubmit: (email: string, firstName: string) => void }) {
+function Step7Calculating({ onNext }: { onNext: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onNext();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onNext]);
+
+  return (
+    <div className="animate-fade-in space-y-8 text-center">
+      <div className="space-y-6">
+        <p className="text-sm uppercase tracking-wider text-muted-foreground">
+          Step 7 of 9
+        </p>
+        <h1 className="text-3xl md:text-4xl font-serif font-medium text-foreground leading-tight">
+          Calculating Your Score
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-md mx-auto">
+          Analyzing your portfolio efficiency...
+        </p>
+      </div>
+
+      <div className="flex justify-center py-8">
+        <div className="relative">
+          <div className="w-20 h-20 rounded-full border-4 border-secondary animate-pulse" />
+          <div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-t-primary animate-spin" />
+        </div>
+      </div>
+
+      <div className="flex justify-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+      </div>
+    </div>
+  );
+}
+
+function Step8Gate({ onSubmit }: { onSubmit: (email: string, firstName: string) => void }) {
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -440,7 +479,7 @@ function Step7Gate({ onSubmit }: { onSubmit: (email: string, firstName: string) 
   );
 }
 
-function Step8Results({ state }: { state: DiagnosticState }) {
+function Step9Results({ state }: { state: DiagnosticState }) {
   // Calculate efficiency score: lower fees = higher score, ETF familiarity boosts score
   const calculateEfficiencyScore = () => {
     let score = 100;
