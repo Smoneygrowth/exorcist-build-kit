@@ -107,13 +107,29 @@ export function DiagnosticFlow() {
     handleNext();
   };
 
+  const getInvestorProfile = () => {
+    // Score 85 (Strong Foundation) -> etf
+    if (state.etfFamiliarity === "experienced") {
+      return "etf";
+    }
+    // Score 15 (Critical) -> inaction
+    if (state.isHighOpportunityCost) {
+      return "inaction";
+    }
+    // Score 55 (Needs Improvement) -> high_fees
+    return "high_fees";
+  };
+
   const handleEmailSubmit = async (email: string, firstName: string) => {
     try {
+      const investorProfile = getInvestorProfile();
+      
       const { error } = await supabase.functions.invoke("send-contact-email", {
         body: {
           email,
           name: firstName,
           message: `Diagnostic completed. Fee: ${state.baselineFee}%, ETF familiarity: ${state.etfFamiliarity}, Quiz guess: ${state.quizGuess}`,
+          investor_profile: investorProfile,
         },
       });
 
