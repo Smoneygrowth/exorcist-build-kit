@@ -96,12 +96,12 @@ export function DiagnosticFlow() {
     handleNext();
   };
 
-  const handleEmailSubmit = async (email: string) => {
+  const handleEmailSubmit = async (email: string, firstName: string) => {
     try {
       const { error } = await supabase.functions.invoke("send-contact-email", {
         body: {
           email,
-          name: "Future Client",
+          name: firstName,
           message: `Diagnostic completed. Fee: ${state.baselineFee}%, ETF familiarity: ${state.etfFamiliarity}, Quiz guess: ${state.quizGuess}`,
         },
       });
@@ -132,12 +132,24 @@ export function DiagnosticFlow() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-secondary z-50">
-        <div
-          className="h-full bg-primary transition-all duration-500 ease-out"
-          style={{ width: `${progress}%` }}
-        />
+      {/* Progress bar with step indicator */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
+        <div className="max-w-2xl mx-auto px-6 py-3">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-muted-foreground">
+              Step {currentStep} of 8
+            </span>
+            <span className="text-sm text-muted-foreground">
+              {Math.round(progress)}% complete
+            </span>
+          </div>
+          <div className="h-1 bg-secondary rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-6 py-12">
@@ -195,10 +207,10 @@ function Step1Provider({ onSelect }: { onSelect: (option: string) => void }) {
           Private Bank / Wealth Manager
         </OptionButton>
         <OptionButton onClick={() => onSelect("retail-bank")}>
-          Retail Bank (Spuerkeess, ING, etc.)
+          Retail Bank or Insurer (Spuerkeess, ING, Lalux etc.)
         </OptionButton>
         <OptionButton onClick={() => onSelect("advisor")}>
-          Financial Advisor / Insurance
+          Financial Advisor (commissioned or % based)
         </OptionButton>
         <OptionButton onClick={() => onSelect("diy")}>
           I invest myself
@@ -361,18 +373,20 @@ function Step6Reveal({ onNext }: { onNext: () => void }) {
   );
 }
 
-function Step7Gate({ onSubmit }: { onSubmit: (email: string) => void }) {
+function Step7Gate({ onSubmit }: { onSubmit: (email: string, firstName: string) => void }) {
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidForm = isValidEmail && firstName.trim().length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValidEmail || isLoading) return;
+    if (!isValidForm || isLoading) return;
 
     setIsLoading(true);
-    await onSubmit(email);
+    await onSubmit(email, firstName.trim());
     setIsLoading(false);
   };
 
@@ -386,11 +400,20 @@ function Step7Gate({ onSubmit }: { onSubmit: (email: string) => void }) {
           Your Personal Score is Ready
         </h1>
         <p className="text-lg text-muted-foreground max-w-md mx-auto">
-          Enter your email to unlock your personalized investment diagnostic results.
+          Enter your details to unlock your personalized investment diagnostic results.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-sm mx-auto">
+        <Input
+          type="text"
+          placeholder="First Name"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          className="h-14 text-center text-lg"
+          disabled={isLoading}
+          required
+        />
         <Input
           type="email"
           placeholder="your@email.com"
@@ -398,19 +421,20 @@ function Step7Gate({ onSubmit }: { onSubmit: (email: string) => void }) {
           onChange={(e) => setEmail(e.target.value)}
           className="h-14 text-center text-lg"
           disabled={isLoading}
+          required
         />
         <Button
           type="submit"
           size="lg"
           className="w-full"
-          disabled={!isValidEmail || isLoading}
+          disabled={!isValidForm || isLoading}
         >
           {isLoading ? "Unlocking..." : "Unlock My Results"}
         </Button>
       </form>
 
       <p className="text-xs text-muted-foreground">
-        We respect your privacy. No spam, ever.
+        We respect your privacy. We will not send marketing communication.
       </p>
     </div>
   );
@@ -446,6 +470,9 @@ function Step8Results({ state }: { state: DiagnosticState }) {
   };
 
   const efficiencyScore = calculateEfficiencyScore();
+  
+  // High efficiency: user uses ETFs and has low fees
+  const isHighEfficiency = state.etfFamiliarity === "experienced" && state.baselineFee <= 0.5;
 
   const handleBookCall = () => {
     // Try to scroll to Calendly section, or open Calendly link
@@ -477,16 +504,19 @@ function Step8Results({ state }: { state: DiagnosticState }) {
           <p className="text-lg font-medium text-foreground">
             Your Efficiency Score
           </p>
-          <p className="text-sm text-muted-foreground">
-            Current estimated fee: {state.baselineFee}%
-          </p>
         </div>
 
         <div className="pt-4 border-t border-border">
-          <p className="text-lg md:text-xl text-foreground leading-relaxed">
-            Reducing your fees and using ETFs could lower the fees you pay by{" "}
-            <span className="font-semibold text-primary">€2,000–€10,000</span> per year.
-          </p>
+          {isHighEfficiency ? (
+            <p className="text-lg md:text-xl text-foreground leading-relaxed">
+              You're doing good but you can optimize further. Would you like to learn how?
+            </p>
+          ) : (
+            <p className="text-lg md:text-xl text-foreground leading-relaxed">
+              Reducing your fees and using ETFs could lower the fees you pay by{" "}
+              <span className="font-semibold text-primary">€2,000–€10,000</span> per year.
+            </p>
+          )}
         </div>
 
         <p className="text-xs text-muted-foreground">
