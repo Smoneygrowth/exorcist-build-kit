@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { GaugeChart } from "@/components/GaugeChart";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -416,6 +417,46 @@ function Step7Gate({ onSubmit }: { onSubmit: (email: string) => void }) {
 }
 
 function Step8Results({ state }: { state: DiagnosticState }) {
+  // Calculate efficiency score: lower fees = higher score, ETF familiarity boosts score
+  const calculateEfficiencyScore = () => {
+    let score = 100;
+    
+    // Deduct points based on fee level (higher fees = lower score)
+    if (state.baselineFee >= 2.0) {
+      score -= 50;
+    } else if (state.baselineFee >= 1.5) {
+      score -= 35;
+    } else if (state.baselineFee >= 1.0) {
+      score -= 20;
+    } else if (state.baselineFee >= 0.5) {
+      score -= 10;
+    }
+    
+    // Add points for ETF familiarity
+    if (state.etfFamiliarity === "experienced") {
+      score += 10;
+    } else if (state.etfFamiliarity === "basic") {
+      score += 0;
+    } else if (state.etfFamiliarity === "none") {
+      score -= 10;
+    }
+    
+    // Clamp score between 0 and 100
+    return Math.max(0, Math.min(100, score));
+  };
+
+  const efficiencyScore = calculateEfficiencyScore();
+
+  const handleBookCall = () => {
+    // Try to scroll to Calendly section, or open Calendly link
+    const calendlySection = document.getElementById("calendly");
+    if (calendlySection) {
+      calendlySection.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.open("https://calendly.com", "_blank");
+    }
+  };
+
   return (
     <div className="animate-fade-in space-y-8 text-center">
       <div className="space-y-4">
@@ -423,21 +464,43 @@ function Step8Results({ state }: { state: DiagnosticState }) {
           Your Results
         </p>
         <h1 className="text-3xl md:text-4xl font-serif font-medium text-foreground leading-tight">
-          Your Investment Diagnostic
+          Your Investment Scorecard
         </h1>
       </div>
 
-      <div className="p-8 rounded-xl border border-border bg-card space-y-4">
-        <p className="text-muted-foreground">
-          Based on your answers, your estimated fee rate is:
-        </p>
-        <p className="text-5xl font-bold text-foreground">
-          {state.baselineFee}%
-        </p>
-        <p className="text-sm text-muted-foreground">
+      <div className="p-8 rounded-2xl border border-border bg-card space-y-6">
+        <div className="flex justify-center">
+          <GaugeChart score={efficiencyScore} maxScore={100} />
+        </div>
+        
+        <div className="space-y-2">
+          <p className="text-lg font-medium text-foreground">
+            Your Efficiency Score
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Current estimated fee: {state.baselineFee}%
+          </p>
+        </div>
+
+        <div className="pt-4 border-t border-border">
+          <p className="text-lg md:text-xl text-foreground leading-relaxed">
+            Reducing your fees and using ETFs could lower the fees you pay by{" "}
+            <span className="font-semibold text-primary">€2,000–€10,000</span> per year.
+          </p>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
           Results sent to: {state.email}
         </p>
       </div>
+
+      <Button
+        onClick={handleBookCall}
+        size="lg"
+        className="w-full max-w-sm"
+      >
+        Book a Call
+      </Button>
     </div>
   );
 }
