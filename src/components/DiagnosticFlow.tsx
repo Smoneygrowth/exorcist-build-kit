@@ -15,6 +15,7 @@ interface DiagnosticState {
   quizGuess: string;
   isHighOpportunityCost: boolean;
   email: string;
+  firstName: string;
 }
 
 export function DiagnosticFlow() {
@@ -25,6 +26,7 @@ export function DiagnosticFlow() {
     quizGuess: "",
     isHighOpportunityCost: false,
     email: "",
+    firstName: "",
   });
   const { toast } = useToast();
 
@@ -117,7 +119,7 @@ export function DiagnosticFlow() {
         return;
       }
 
-      setState((prev) => ({ ...prev, email }));
+      setState((prev) => ({ ...prev, email, firstName }));
       handleNext();
     } catch (err) {
       console.error("Error submitting email:", err);
@@ -515,13 +517,12 @@ function Step9Results({ state }: { state: DiagnosticState }) {
   const isHighEfficiency = state.etfFamiliarity === "experienced" && state.baselineFee <= 0.5;
 
   const handleBookCall = () => {
-    // Try to scroll to Calendly section, or open Calendly link
-    const calendlySection = document.getElementById("calendly");
-    if (calendlySection) {
-      calendlySection.scrollIntoView({ behavior: "smooth" });
-    } else {
-      window.open("https://calendly.com", "_blank");
-    }
+    const baseUrl = "https://calendly.com/romain-smartmoneygrowth/new-meeting";
+    const params = new URLSearchParams({
+      name: state.firstName,
+      email: state.email,
+    });
+    window.open(`${baseUrl}?${params.toString()}`, "_blank");
   };
 
   return (
