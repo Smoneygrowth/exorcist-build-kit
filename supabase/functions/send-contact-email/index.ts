@@ -43,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Add subscriber to MailerLite
+    // Add subscriber to MailerLite with group assignment
     const subscriberResponse = await fetch("https://connect.mailerlite.com/api/subscribers", {
       method: "POST",
       headers: {
@@ -55,6 +55,7 @@ const handler = async (req: Request): Promise<Response> => {
         fields: {
           name: name,
         },
+        groups: ["175309374057613174"],
       }),
     });
 
