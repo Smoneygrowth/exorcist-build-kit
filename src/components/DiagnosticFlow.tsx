@@ -7,6 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 import { GaugeChart } from "@/components/GaugeChart";
 import { Calendar } from "lucide-react";
 
+declare global {
+  interface Window {
+    Calendly?: {
+      initPopupWidget: (options: { url: string }) => void;
+    };
+  }
+}
+
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 interface DiagnosticState {
@@ -516,13 +524,36 @@ function Step9Results({ state }: { state: DiagnosticState }) {
   // High efficiency: user uses ETFs and has low fees
   const isHighEfficiency = state.etfFamiliarity === "experienced" && state.baselineFee <= 0.5;
 
+  useEffect(() => {
+    // Load Calendly widget script and CSS
+    if (!document.querySelector('script[src*="calendly.com/assets/external/widget.js"]')) {
+      const script = document.createElement("script");
+      script.src = "https://assets.calendly.com/assets/external/widget.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    if (!document.querySelector('link[href*="calendly.com/assets/external/widget.css"]')) {
+      const link = document.createElement("link");
+      link.href = "https://assets.calendly.com/assets/external/widget.css";
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+  }, []);
+
   const handleBookCall = () => {
     const baseUrl = "https://calendly.com/romain-smartmoneygrowth/new-meeting";
     const params = new URLSearchParams({
       name: state.firstName,
       email: state.email,
+      hide_gdpr_banner: "1",
     });
-    window.open(`${baseUrl}?${params.toString()}`, "_blank");
+    
+    if (window.Calendly) {
+      window.Calendly.initPopupWidget({ url: `${baseUrl}?${params.toString()}` });
+    } else {
+      // Fallback if script hasn't loaded
+      window.open(`${baseUrl}?${params.toString()}`, "_blank");
+    }
   };
 
   return (
