@@ -16,8 +16,7 @@ export function HeroSection({ onStart }: HeroSectionProps) {
         </h1>
         
         <p className="body-large text-muted-foreground max-w-xl mx-auto mb-12">
-          Take the 60-second diagnostic used by Luxembourg's independent professionals 
-          to identify hidden fees and tax drag.
+          Take the 60-second diagnostic used by Luxembourg's professionals to identify hidden fees and inefficiencies with your investments.
         </p>
         
         <Button 
