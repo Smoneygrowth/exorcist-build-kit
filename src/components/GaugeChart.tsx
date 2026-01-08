@@ -5,9 +5,10 @@ interface GaugeChartProps {
   score: number;
   maxScore?: number;
   className?: string;
+  size?: "sm" | "md" | "lg";
 }
 
-export function GaugeChart({ score, maxScore = 100, className }: GaugeChartProps) {
+export function GaugeChart({ score, maxScore = 100, className, size = "lg" }: GaugeChartProps) {
   const [animatedScore, setAnimatedScore] = useState(0);
   const percentage = (score / maxScore) * 100;
   const circumference = 2 * Math.PI * 45;
@@ -33,12 +34,20 @@ export function GaugeChart({ score, maxScore = 100, className }: GaugeChartProps
     return "Critical";
   };
 
+  const sizeConfig = {
+    sm: { svgSize: 100, scoreText: "text-3xl", labelText: "text-sm", marginTop: "mt-2" },
+    md: { svgSize: 150, scoreText: "text-4xl", labelText: "text-base", marginTop: "mt-3" },
+    lg: { svgSize: 200, scoreText: "text-5xl", labelText: "text-lg", marginTop: "mt-4" },
+  };
+
+  const config = sizeConfig[size];
+
   return (
     <div className={cn("relative inline-flex flex-col items-center", className)}>
       <svg
         className="transform -rotate-90"
-        width="200"
-        height="200"
+        width={config.svgSize}
+        height={config.svgSize}
         viewBox="0 0 100 100"
       >
         {/* Background circle */}
@@ -67,12 +76,12 @@ export function GaugeChart({ score, maxScore = 100, className }: GaugeChartProps
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-5xl font-heading font-semibold text-foreground">
+        <span className={cn("font-heading font-semibold text-foreground", config.scoreText)}>
           {animatedScore}
         </span>
         <span className="text-sm text-muted-foreground mt-1">/ {maxScore}</span>
       </div>
-      <span className="mt-4 text-lg font-medium text-foreground">{getScoreLabel()}</span>
+      <span className={cn("font-medium text-foreground", config.marginTop, config.labelText)}>{getScoreLabel()}</span>
     </div>
   );
 }
