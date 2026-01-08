@@ -588,6 +588,23 @@ function Step9Results({ state }: { state: DiagnosticState }) {
           </p>
         </div>
 
+        {/* Video Section */}
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground text-center">
+            Watch this 4-minute video to understand how we fix these gaps
+          </p>
+          <div className="aspect-video rounded-lg overflow-hidden">
+            <iframe
+              src="https://player.vimeo.com/video/1151011904"
+              className="w-full h-full"
+              frameBorder="0"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              title="Strategy Overview Video"
+            />
+          </div>
+        </div>
+
         <Button
           onClick={handleBookCall}
           size="lg"
