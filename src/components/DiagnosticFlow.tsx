@@ -567,30 +567,36 @@ function Step9Results({ state }: { state: DiagnosticState }) {
   };
 
   return (
-    <div className="animate-fade-in space-y-8 text-center">
-      <div className="space-y-4">
-        <p className="text-sm uppercase tracking-wider text-muted-foreground">
+    <div className="animate-fade-in space-y-4 md:space-y-8 text-center">
+      <div className="space-y-2 md:space-y-4">
+        <p className="text-xs md:text-sm uppercase tracking-wider text-muted-foreground">
           Your Results
         </p>
-        <h1 className="text-3xl md:text-4xl font-serif font-medium text-foreground leading-tight">
+        <h1 className="text-2xl md:text-4xl font-serif font-medium text-foreground leading-tight">
           Your Investment Scorecard
         </h1>
       </div>
 
-      <div className="p-8 rounded-2xl border border-border bg-card space-y-6">
+      <div className="p-4 md:p-8 rounded-2xl border border-border bg-card space-y-3 md:space-y-6">
         <div className="flex justify-center">
-          <GaugeChart score={profile.score} maxScore={100} />
+          {/* Responsive gauge: small on mobile, large on desktop */}
+          <div className="md:hidden">
+            <GaugeChart score={profile.score} maxScore={100} size="sm" />
+          </div>
+          <div className="hidden md:block">
+            <GaugeChart score={profile.score} maxScore={100} size="lg" />
+          </div>
         </div>
 
-        <div className="pt-4 border-t border-border">
-          <p className="text-lg md:text-xl text-foreground leading-relaxed">
+        <div className="pt-2 md:pt-4 border-t border-border">
+          <p className="text-sm md:text-xl text-foreground leading-tight md:leading-relaxed">
             {profile.text}
           </p>
         </div>
 
         {/* Video Section */}
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground text-center">
+        <div className="space-y-1 md:space-y-2">
+          <p className="text-xs md:text-sm text-muted-foreground text-center">
             Watch this 4-minute video to understand how we fix these gaps
           </p>
           <div className="aspect-video rounded-lg overflow-hidden">
