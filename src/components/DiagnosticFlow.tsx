@@ -143,6 +143,11 @@ export function DiagnosticFlow() {
         return;
       }
 
+      // Track Lead event in Meta Pixel
+      if (typeof fbq !== 'undefined') {
+        fbq('track', 'Lead');
+      }
+
       setState((prev) => ({ ...prev, email, firstName }));
       handleNext();
     } catch (err) {
