@@ -94,7 +94,7 @@ export function ResultsDashboard({ answers, email }: ResultsDashboardProps) {
             variant="hero"
             size="xl"
             className="w-full rounded-lg group"
-            onClick={() => window.open("https://calendly.com/romain-smartmoneygrowth/new-meeting", "_blank")}
+            onClick={() => window.open("https://cal.eu/smartmoneygrowth/strategic-review", "_blank")}
           >
             <Calendar className="h-5 w-5 mr-2" />
             Book Your Strategy Review
