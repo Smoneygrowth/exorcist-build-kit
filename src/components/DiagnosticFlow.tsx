@@ -7,13 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { GaugeChart } from "@/components/GaugeChart";
 import { Calendar } from "lucide-react";
 
-declare global {
-  interface Window {
-    Calendly?: {
-      initPopupWidget: (options: { url: string }) => void;
-    };
-  }
-}
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -539,36 +532,14 @@ function Step9Results({ state }: { state: DiagnosticState }) {
 
   const profile = getUserProfile();
 
-  useEffect(() => {
-    // Load Calendly widget script and CSS
-    if (!document.querySelector('script[src*="calendly.com/assets/external/widget.js"]')) {
-      const script = document.createElement("script");
-      script.src = "https://assets.calendly.com/assets/external/widget.js";
-      script.async = true;
-      document.body.appendChild(script);
-    }
-    if (!document.querySelector('link[href*="calendly.com/assets/external/widget.css"]')) {
-      const link = document.createElement("link");
-      link.href = "https://assets.calendly.com/assets/external/widget.css";
-      link.rel = "stylesheet";
-      document.head.appendChild(link);
-    }
-  }, []);
 
   const handleBookCall = () => {
-    const baseUrl = "https://calendly.com/romain-smartmoneygrowth/new-meeting";
+    const baseUrl = "https://cal.eu/smartmoneygrowth/strategic-review";
     const params = new URLSearchParams({
       name: state.firstName,
       email: state.email,
-      hide_gdpr_banner: "1",
     });
-    
-    if (window.Calendly) {
-      window.Calendly.initPopupWidget({ url: `${baseUrl}?${params.toString()}` });
-    } else {
-      // Fallback if script hasn't loaded
-      window.open(`${baseUrl}?${params.toString()}`, "_blank");
-    }
+    window.open(`${baseUrl}?${params.toString()}`, "_blank");
   };
 
   return (
